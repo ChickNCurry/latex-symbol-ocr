@@ -5,5 +5,5 @@ from typing import List
 class IMapper(ABC):
 
     @abstractmethod
-    def map(self, class_labels: List[int]) -> List[str]:
+    def map_to_markup(self, class_labels: List[int]) -> List[str]:
         pass

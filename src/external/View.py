@@ -14,72 +14,64 @@ class View(IControllerObserver, IPredictionsObserver):
     def __init__(self, controller: Controller):
         self.controller = controller
 
-        self.canvas_dims = (256, 256)
-        self.render_dims = (64, 64)
-        self.entry_width = 20
+        self.CANVAS_DIMS = (256, 256)
+        self.RENDER_DIMS = (64, 64)
+        self.ENTRY_WIDTH = 20
+        self.TOP_K = 3
 
         self.root = tk.Tk()
         self.root.resizable(False, False)
-        self.buffers = [ImageTk.PhotoImage(Image.new(mode="RGB", size=self.render_dims, color="white"))] * 3
+        self.renders = [ImageTk.PhotoImage(Image.new(mode="RGB", size=self.RENDER_DIMS, color="white"))] * self.TOP_K
         self.markups = [tk.StringVar(), tk.StringVar(), tk.StringVar()]
 
-        self.canvas = tk.Canvas(self.root, bg="white", width=self.canvas_dims[0], height=self.canvas_dims[1])
-        self.canvas.bind("<B1-Motion>", lambda e: self.controller.draw(e, self.canvas_dims))
+        self.canvas = tk.Canvas(self.root, bg="white", width=self.CANVAS_DIMS[0], height=self.CANVAS_DIMS[1])
+        self.canvas.bind("<B1-Motion>", lambda e: self.controller.draw(e, self.CANVAS_DIMS))
         self.button_predict = ttk.Button(self.root, text="predict", command=self.controller.predict)
         self.button_clear = ttk.Button(self.root, text="clear", command=self.controller.clear)
-        self.label_1 = ttk.Label(self.root, text="1.")
-        self.label_render_1 = ttk.Label(self.root, image=self.buffers[0])
-        self.entry_markup_1 = ttk.Entry(self.root, width=self.entry_width, textvariable=self.markups[0])
-        self.button_copy_1 = ttk.Button(self.root, text="copy", command=lambda: self.copy(0))
-        self.label_2 = ttk.Label(self.root, text="2.")
-        self.label_render_2 = ttk.Label(self.root, image=self.buffers[1])
-        self.entry_markup_2 = ttk.Entry(self.root, width=self.entry_width, textvariable=self.markups[1])
-        self.button_copy_2 = ttk.Button(self.root, text="copy", command=lambda: self.copy(1))
-        self.label_3 = ttk.Label(self.root, text="3.")
-        self.label_render_3 = ttk.Label(self.root, image=self.buffers[2])
-        self.entry_markup_3 = ttk.Entry(self.root, width=self.entry_width, textvariable=self.markups[2])
-        self.button_copy_3 = ttk.Button(self.root, text="copy", command=lambda: self.copy(2))
-        self.labels_render = [self.label_render_1, self.label_render_2, self.label_render_3]
+
+        self.prediction_components = []
+        for i in range(self.TOP_K):
+            label_ranking = ttk.Label(self.root, text=f"{i + 1}.")
+            label_render = ttk.Label(self.root, image=self.renders[i])
+            entry_markup = ttk.Entry(self.root, width=self.ENTRY_WIDTH, textvariable=self.markups[i])
+            button_copy = ttk.Button(self.root, text="copy", command=lambda: self.copy(i))
+            self.prediction_components.append((label_ranking, label_render, entry_markup, button_copy))
 
         self.canvas.grid(column=0, row=0, columnspan=3, rowspan=3)
         self.button_predict.grid(column=0, row=3, columnspan=3)
         self.button_clear.grid(column=3, row=3, columnspan=4)
-        self.label_1.grid(column=3, row=0)
-        self.label_render_1.grid(column=4, row=0)
-        self.entry_markup_1.grid(column=5, row=0)
-        self.button_copy_1.grid(column=6, row=0)
-        self.label_2.grid(column=3, row=1)
-        self.label_render_2.grid(column=4, row=1)
-        self.entry_markup_2.grid(column=5, row=1)
-        self.button_copy_2.grid(column=6, row=1)
-        self.label_3.grid(column=3, row=2)
-        self.label_render_3.grid(column=4, row=2)
-        self.entry_markup_3.grid(column=5, row=2)
-        self.button_copy_3.grid(column=6, row=2)
 
-    def run(self):
+        for i, c in enumerate(self.prediction_components):
+            c[0].grid(column=3, row=i)
+            c[1].grid(column=4, row=i)
+            c[2].grid(column=5, row=i)
+            c[3].grid(column=6, row=i)
+
+    def run(self) -> None:
         self.root.mainloop()
 
-    def copy(self, index: int):
+    def copy(self, index: int) -> None:
         self.root.clipboard_clear()
         self.root.clipboard_append(self.markups[index].get())
 
-    def update_drawing(self, x: int, y: int, brush_size: tuple[int, int]):
-        self.canvas.create_oval((x - brush_size[0],
-                                 y - brush_size[1],
-                                 x + brush_size[0],
-                                 y + brush_size[1]), fill="black")
+    def update_drawing(self, coords: tuple[int, int], brush_size: tuple[int, int]) -> None:
+        self.canvas.create_oval((coords[0] - brush_size[0],
+                                 coords[1] - brush_size[1],
+                                 coords[0] + brush_size[0],
+                                 coords[1] + brush_size[1]), fill="black")
 
-    def update_clearing(self):
+    def update_clearing(self) -> None:
         self.canvas.delete("all")
-        self.buffers = [ImageTk.PhotoImage(Image.new(mode="RGB", size=self.render_dims, color="white"))] * 3
-        [self.labels_render[i].configure(image=self.buffers[i]) for i in range(3)]
-        [m.set("") for m in self.markups]
+        self.renders = [ImageTk.PhotoImage(Image.new(mode="RGB", size=self.RENDER_DIMS, color="white"))] * 3
+        for i in range(self.TOP_K):
+            self.prediction_components[i][1].configure(image=self.renders[i])
+        for m in self.markups:
+            m.set("")
 
-    def update_predictions(self, predictions: List[Prediction]):
-        assert len(predictions) == len(self.markups)
-        for i in range(len(predictions)):
+    def update_predictions(self, predictions: List[Prediction]) -> None:
+        assert len(predictions) == self.TOP_K
+        for i in range(self.TOP_K):
             self.markups[i].set(predictions[i].markup)
-            render = predictions[i].render.resize(self.render_dims)
-            self.buffers[i] = ImageTk.PhotoImage(render)
-            self.labels_render[i].configure(image=self.buffers[i])
+            render = predictions[i].render.resize(self.RENDER_DIMS)
+            self.renders[i] = ImageTk.PhotoImage(render)
+            self.prediction_components[i][1].configure(image=self.renders[i])

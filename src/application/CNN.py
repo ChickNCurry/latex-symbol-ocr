@@ -1,4 +1,5 @@
 import torch.nn as nn
+from torch import Tensor
 
 
 class CNN(nn.Module):
@@ -33,12 +34,15 @@ class CNN(nn.Module):
         # 64 * 10 * 10
         # 64 * 5 * 5
 
-        self.init_weights()
+        self._init_weights()
 
-    def forward(self, x):
+    def forward(self, x) -> Tensor:
         return self.model(x)
 
-    def init_weights(self):
+    def get_input_dims(self) -> tuple[int, int]:
+        return self.input_dims
+
+    def _init_weights(self) -> None:
         for m in self.model:
             if isinstance(m, nn.Conv2d):
                 nn.init.xavier_uniform_(m.weight)
@@ -47,6 +51,3 @@ class CNN(nn.Module):
             elif isinstance(m, nn.Linear):
                 nn.init.xavier_uniform_(m.weight)
                 nn.init.constant_(m.bias, 0)
-
-    def get_input_dims(self) -> tuple:
-        return self.input_dims

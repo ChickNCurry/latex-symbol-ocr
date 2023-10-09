@@ -15,10 +15,10 @@ class LatexSymbolPredictor(IPredictor):
         self.renderer = renderer
         self.predictions = predictions
 
-    def predict(self, image: Image) -> None:
+    def predict_markup(self, image: Image) -> None:
         (class_labels, probabilities) = self.classifier.classify(image, 3)
-        markups = self.mapper.map(class_labels)
-        renders = self.renderer.render(markups)
+        markups = self.mapper.map_to_markup(class_labels)
+        renders = self.renderer.render_markup(markups)
         assert len(class_labels) == len(markups) == len(renders)
 
         predictions = []
@@ -27,5 +27,5 @@ class LatexSymbolPredictor(IPredictor):
             predictions.append(prediction)
         self.predictions.set_predictions(predictions)
 
-    def get_input_dims(self) -> tuple:
+    def get_input_dims(self) -> tuple[int, int]:
         return self.classifier.get_input_dims()

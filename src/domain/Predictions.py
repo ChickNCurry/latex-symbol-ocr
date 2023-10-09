@@ -9,10 +9,10 @@ class Predictions:
         self.predictions: List[Prediction] = []
         self.observers: List[IPredictionsObserver] = []
 
-    def register(self, observer: IPredictionsObserver):
+    def register(self, observer: IPredictionsObserver) -> None:
         self.observers.append(observer)
 
-    def set_predictions(self, predictions: List[Prediction]):
+    def set_predictions(self, predictions: List[Prediction]) -> None:
         self.predictions = predictions
         for obs in self.observers:
             obs.update_predictions(self.predictions)

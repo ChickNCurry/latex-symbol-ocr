@@ -7,5 +7,5 @@ from PIL.Image import Image
 class IRenderer(ABC):
 
     @abstractmethod
-    def render(self, markups: List[str]) -> List[Image]:
+    def render_markup(self, markups: List[str]) -> List[Image]:
         pass

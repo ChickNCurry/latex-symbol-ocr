@@ -11,5 +11,5 @@ class IClassifier(ABC):
         pass
 
     @abstractmethod
-    def get_input_dims(self) -> tuple:
+    def get_input_dims(self) -> tuple[int, int]:
         pass

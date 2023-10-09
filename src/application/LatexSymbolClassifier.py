@@ -23,17 +23,17 @@ class LatexSymbolClassifier(IClassifier):
         self.encoder.classes_ = np.load('./data/classes.npy')
 
     def classify(self, image: Image, top_k: int) -> (List[int], List[float]):
-        tensor = self.convert_image_to_tensor(image)
+        tensor = self._convert_image_to_tensor(image)
         output = self.model(tensor)
         probability_tensor, class_label_tensor = torch.topk(output, top_k, 1)
         class_labels, probabilities = class_label_tensor[0].tolist(), probability_tensor[0].tolist()
         decoded_class_labels = self.encoder.inverse_transform(class_labels)
         return list(map(int, decoded_class_labels)), probabilities
 
-    def get_input_dims(self) -> tuple:
+    def get_input_dims(self) -> tuple[int, int]:
         return self.input_dims
 
-    def convert_image_to_tensor(self, image: Image) -> Tensor:
+    def _convert_image_to_tensor(self, image: Image) -> Tensor:
         image_resized = image.resize(self.input_dims)
         image_rgb = image_resized.convert("RGB")
         image_np = np.array(image_rgb)
