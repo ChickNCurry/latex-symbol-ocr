@@ -1,8 +1,10 @@
 import torch.nn as nn
 from torch import Tensor
 
+from src.application.IInputDependant import IInputDependant
 
-class CNN(nn.Module):
+
+class CNN(nn.Module, IInputDependant):
     def __init__(self, in_channels, num_of_classes):
         super().__init__()
 

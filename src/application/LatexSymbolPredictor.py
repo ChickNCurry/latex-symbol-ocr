@@ -16,7 +16,7 @@ class LatexSymbolPredictor(IPredictor):
         self.predictions = predictions
 
     def predict_markup(self, image: Image) -> None:
-        (class_labels, probabilities) = self.classifier.classify(image, 3)
+        class_labels, probabilities = self.classifier.classify(image, 3)
         markups = self.mapper.map_to_markup(class_labels)
         renders = self.renderer.render_markup(markups)
         assert len(class_labels) == len(markups) == len(renders)

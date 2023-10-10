@@ -34,7 +34,7 @@ class View(IControllerObserver, IPredictionsObserver):
             label_ranking = ttk.Label(self.root, text=f"{i + 1}.")
             label_render = ttk.Label(self.root, image=self.renders[i])
             entry_markup = ttk.Entry(self.root, width=self.ENTRY_WIDTH, textvariable=self.markups[i])
-            button_copy = ttk.Button(self.root, text="copy", command=lambda: self.copy(i))
+            button_copy = ttk.Button(self.root, text="copy", command=lambda: self._copy(i))
             self.prediction_components.append((label_ranking, label_render, entry_markup, button_copy))
 
         self.canvas.grid(column=0, row=0, columnspan=3, rowspan=3)
@@ -49,10 +49,6 @@ class View(IControllerObserver, IPredictionsObserver):
 
     def run(self) -> None:
         self.root.mainloop()
-
-    def copy(self, index: int) -> None:
-        self.root.clipboard_clear()
-        self.root.clipboard_append(self.markups[index].get())
 
     def update_drawing(self, coords: tuple[int, int], brush_size: tuple[int, int]) -> None:
         self.canvas.create_oval((coords[0] - brush_size[0],
@@ -75,3 +71,7 @@ class View(IControllerObserver, IPredictionsObserver):
             render = predictions[i].render.resize(self.RENDER_DIMS)
             self.renders[i] = ImageTk.PhotoImage(render)
             self.prediction_components[i][1].configure(image=self.renders[i])
+
+    def _copy(self, index: int) -> None:
+        self.root.clipboard_clear()
+        self.root.clipboard_append(self.markups[index].get())

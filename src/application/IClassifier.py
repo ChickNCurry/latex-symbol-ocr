@@ -1,15 +1,13 @@
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from typing import List
 
 from PIL.Image import Image
 
+from src.application.IInputDependant import IInputDependant
 
-class IClassifier(ABC):
 
-    @abstractmethod
-    def classify(self, image: Image, top_k: int) -> (List[int], List[float]):
-        pass
+class IClassifier(IInputDependant):
 
     @abstractmethod
-    def get_input_dims(self) -> tuple[int, int]:
+    def classify(self, image: Image, top_k: int) -> tuple[List[int], List[float]]:
         pass
