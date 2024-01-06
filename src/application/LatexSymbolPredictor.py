@@ -23,7 +23,8 @@ class LatexSymbolPredictor(IPredictor):
 
         predictions = []
         for i in range(len(class_labels)):
-            prediction = Prediction(class_labels[i], markups[i], renders[i], probabilities[i])
+            prediction = Prediction(
+                class_labels[i], markups[i], renders[i], probabilities[i])
             predictions.append(prediction)
         self.predictions.set_predictions(predictions)
 

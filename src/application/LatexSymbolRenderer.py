@@ -1,7 +1,7 @@
 import io
 from typing import List
 
-from PIL.Image import Image
+from PIL import Image
 import matplotlib.pyplot as plt
 
 from src.application.IRenderer import IRenderer
@@ -9,7 +9,7 @@ from src.application.IRenderer import IRenderer
 
 class LatexSymbolRenderer(IRenderer):
 
-    def render_markup(self, markups: List[str]) -> List[Image]:
+    def render_markup(self, markups: List[str]) -> List[Image.Image]:
         images = []
         for m in markups:
             plt.figure()

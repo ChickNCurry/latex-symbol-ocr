@@ -1,10 +1,10 @@
-from typing import List
+from typing import List, Tuple
 
 import cv2
 import torch
 from sklearn.preprocessing import LabelEncoder
 from torch import load, Tensor
-from PIL import Image
+from PIL.Image import Image
 import numpy as np
 
 from src.application.CNN import CNN
@@ -22,11 +22,12 @@ class LatexSymbolClassifier(IClassifier):
         self.encoder = LabelEncoder()
         self.encoder.classes_ = np.load('./data/classes.npy')
 
-    def classify(self, image: Image, top_k: int) -> (List[int], List[float]):
+    def classify(self, image: Image, top_k: int) -> Tuple[List[int], List[float]]:
         tensor = self._convert_image_to_tensor(image)
         output = self.model(tensor)
         probability_tensor, class_label_tensor = torch.topk(output, top_k, 1)
-        class_labels, probabilities = class_label_tensor[0].tolist(), probability_tensor[0].tolist()
+        class_labels, probabilities = class_label_tensor[0].tolist(
+        ), probability_tensor[0].tolist()
         decoded_class_labels = self.encoder.inverse_transform(class_labels)
         return list(map(int, decoded_class_labels)), probabilities
 
@@ -41,4 +42,3 @@ class LatexSymbolClassifier(IClassifier):
         image_gray = cv2.cvtColor(image_cv, cv2.COLOR_BGR2GRAY)
         image_tensor = torch.FloatTensor(image_gray)[None, None, :, :]
         return image_tensor
-
