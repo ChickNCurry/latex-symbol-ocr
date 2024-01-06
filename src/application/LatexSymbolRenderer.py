@@ -1,7 +1,7 @@
 import io
 from typing import List
 
-from PIL import Image
+from PIL.Image import Image
 import matplotlib.pyplot as plt
 
 from src.application.IRenderer import IRenderer
