@@ -5,7 +5,7 @@ from src.domain.Prediction import Prediction
 
 
 class Predictions:
-    def __init__(self):
+    def __init__(self) -> None:
         self.predictions: List[Prediction] = []
         self.observers: List[IPredictionsObserver] = []
 

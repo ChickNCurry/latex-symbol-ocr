@@ -8,5 +8,5 @@ from src.application.IInputDependant import IInputDependant
 class IPredictor(IInputDependant):
 
     @abstractmethod
-    def predict_markup(self, image: Image):
+    def predict_markup(self, image: Image) -> None:
         pass

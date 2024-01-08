@@ -12,7 +12,7 @@ from src.application.IClassifier import IClassifier
 
 
 class LatexSymbolClassifier(IClassifier):
-    def __init__(self):
+    def __init__(self) -> None:
         self.model = CNN(1, 369)
         self.input_dims = self.model.get_input_dims()
         with open('./data/model_state.pt', 'rb') as f:

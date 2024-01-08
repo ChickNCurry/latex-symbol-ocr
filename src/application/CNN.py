@@ -1,3 +1,4 @@
+from typing import cast
 import torch.nn as nn
 from torch import Tensor
 
@@ -5,7 +6,7 @@ from src.application.IInputDependant import IInputDependant
 
 
 class CNN(nn.Module, IInputDependant):
-    def __init__(self, in_channels, num_of_classes):
+    def __init__(self, in_channels: int, num_of_classes: int) -> None:
         super().__init__()
 
         self.input_dims = (32, 32)
@@ -38,8 +39,8 @@ class CNN(nn.Module, IInputDependant):
 
         self._init_weights()
 
-    def forward(self, x) -> Tensor:
-        return self.model(x)
+    def forward(self, x: Tensor) -> Tensor:
+        return cast(Tensor, self.model(x))
 
     def get_input_dims(self) -> tuple[int, int]:
         return self.input_dims
