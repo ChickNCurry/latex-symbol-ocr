@@ -18,7 +18,7 @@ class View(IControllerObserver, IPredictionsObserver):
         self.RENDER_DIMS = (64, 64)
         self.ENTRY_WIDTH = 20
         self.TOP_K = 3
-
+    
         self.root = tk.Tk()
         self.root.resizable(False, False)
         self.renders = [ImageTk.PhotoImage(
