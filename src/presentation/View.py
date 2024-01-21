@@ -1,12 +1,12 @@
 import tkinter as tk
 from tkinter import ttk
-from typing import List
+from typing import List, Tuple
 
 from PIL import Image, ImageTk
 
 from src.controllers.Controller import Controller
-from src.controllers.IControllerObserver import IControllerObserver
-from src.domain.IPredictionsObserver import IPredictionsObserver
+from src.controllers.interfaces import IControllerObserver
+from src.domain.interfaces import IPredictionsObserver
 from src.domain.Prediction import Prediction
 
 
@@ -18,32 +18,42 @@ class View(IControllerObserver, IPredictionsObserver):
         self.RENDER_DIMS = (64, 64)
         self.ENTRY_WIDTH = 20
         self.TOP_K = 3
-    
+
         self.root = tk.Tk()
         self.root.resizable(False, False)
-        self.renders = [ImageTk.PhotoImage(
-            Image.new(mode="RGB", size=self.RENDER_DIMS, color="white"))] * self.TOP_K
+        self.renders = [
+            ImageTk.PhotoImage(
+                Image.new(mode="RGB", size=self.RENDER_DIMS, color="white")
+            )
+        ] * self.TOP_K
         self.markups = [tk.StringVar(), tk.StringVar(), tk.StringVar()]
 
         self.canvas = tk.Canvas(
-            self.root, bg="white", width=self.CANVAS_DIMS[0], height=self.CANVAS_DIMS[1])
+            self.root, bg="white", width=self.CANVAS_DIMS[0], height=self.CANVAS_DIMS[1]
+        )
         self.canvas.bind(
-            "<B1-Motion>", lambda e: self.controller.draw(e, self.CANVAS_DIMS))
+            "<B1-Motion>", lambda e: self.controller.draw(e, self.CANVAS_DIMS)
+        )
         self.button_predict = ttk.Button(
-            self.root, text="predict", command=self.controller.predict)
+            self.root, text="predict", command=self.controller.predict
+        )
         self.button_clear = ttk.Button(
-            self.root, text="clear", command=self.controller.clear)
+            self.root, text="clear", command=self.controller.clear
+        )
 
         self.prediction_components = []
         for i in range(self.TOP_K):
             label_ranking = ttk.Label(self.root, text=f"{i + 1}.")
             label_render = ttk.Label(self.root, image=self.renders[i])
             entry_markup = ttk.Entry(
-                self.root, width=self.ENTRY_WIDTH, textvariable=self.markups[i])
+                self.root, width=self.ENTRY_WIDTH, textvariable=self.markups[i]
+            )
             button_copy = ttk.Button(
-                self.root, text="copy", command=lambda: self._copy(i))
+                self.root, text="copy", command=lambda: self._copy(i)
+            )
             self.prediction_components.append(
-                (label_ranking, label_render, entry_markup, button_copy))
+                (label_ranking, label_render, entry_markup, button_copy)
+            )
 
         self.canvas.grid(column=0, row=0, columnspan=3, rowspan=3)
         self.button_predict.grid(column=0, row=3, columnspan=3)
@@ -58,16 +68,26 @@ class View(IControllerObserver, IPredictionsObserver):
     def run(self) -> None:
         self.root.mainloop()
 
-    def update_drawing(self, coords: tuple[int, int], brush_size: tuple[int, int]) -> None:
-        self.canvas.create_oval((coords[0] - brush_size[0],
-                                 coords[1] - brush_size[1],
-                                 coords[0] + brush_size[0],
-                                 coords[1] + brush_size[1]), fill="black")
+    def update_drawing(
+        self, coords: Tuple[int, int], brush_size: Tuple[int, int]
+    ) -> None:
+        self.canvas.create_oval(
+            (
+                coords[0] - brush_size[0],
+                coords[1] - brush_size[1],
+                coords[0] + brush_size[0],
+                coords[1] + brush_size[1],
+            ),
+            fill="black",
+        )
 
     def update_clearing(self) -> None:
         self.canvas.delete("all")
-        self.renders = [ImageTk.PhotoImage(
-            Image.new(mode="RGB", size=self.RENDER_DIMS, color="white"))] * 3
+        self.renders = [
+            ImageTk.PhotoImage(
+                Image.new(mode="RGB", size=self.RENDER_DIMS, color="white")
+            )
+        ] * 3
         for i in range(self.TOP_K):
             self.prediction_components[i][1].configure(image=self.renders[i])
         for m in self.markups:

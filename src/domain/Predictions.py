@@ -1,6 +1,6 @@
 from typing import List
 
-from src.domain.IPredictionsObserver import IPredictionsObserver
+from src.domain.interfaces import IPredictionsObserver
 from src.domain.Prediction import Prediction
 
 

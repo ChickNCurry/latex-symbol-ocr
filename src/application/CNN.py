@@ -1,8 +1,8 @@
-from typing import cast
+from typing import Tuple, cast
 import torch.nn as nn
 from torch import Tensor
 
-from src.application.IInputDependant import IInputDependant
+from src.application.interfaces import IInputDependant
 
 
 class CNN(nn.Module, IInputDependant):
@@ -28,7 +28,7 @@ class CNN(nn.Module, IInputDependant):
             nn.Linear(in_features=1024, out_features=1024),
             nn.LeakyReLU(),
             nn.Dropout(),
-            nn.Linear(1024, num_of_classes)
+            nn.Linear(1024, num_of_classes),
         )
 
         # 1 * 32 * 32
@@ -42,7 +42,7 @@ class CNN(nn.Module, IInputDependant):
     def forward(self, x: Tensor) -> Tensor:
         return cast(Tensor, self.model(x))
 
-    def get_input_dims(self) -> tuple[int, int]:
+    def get_input_dims(self) -> Tuple[int, int]:
         return self.input_dims
 
     def _init_weights(self) -> None:

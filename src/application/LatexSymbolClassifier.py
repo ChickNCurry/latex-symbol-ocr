@@ -2,36 +2,38 @@ from typing import List, Tuple
 
 import cv2
 import torch
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import LabelEncoder  # type: ignore
 from torch import load, Tensor
 from PIL.Image import Image
 import numpy as np
 
 from src.application.CNN import CNN
-from src.application.IClassifier import IClassifier
+from src.application.interfaces import IClassifier
 
 
 class LatexSymbolClassifier(IClassifier):
     def __init__(self) -> None:
         self.model = CNN(1, 369)
         self.input_dims = self.model.get_input_dims()
-        with open('src/data/model_state.pt', 'rb') as f:
+        with open("data/model_state.pt", "rb") as f:
             self.model.load_state_dict(load(f))
         self.model.eval()
 
         self.encoder = LabelEncoder()
-        self.encoder.classes_ = np.load('src/data/classes.npy')
+        self.encoder.classes_ = np.load("data/classes.npy")
 
     def classify(self, image: Image, top_k: int) -> Tuple[List[int], List[float]]:
         tensor = self._convert_image_to_tensor(image)
         output = self.model(tensor)
         probability_tensor, class_label_tensor = torch.topk(output, top_k, 1)
-        class_labels, probabilities = class_label_tensor[0].tolist(
-        ), probability_tensor[0].tolist()
+        class_labels, probabilities = (
+            class_label_tensor[0].tolist(),
+            probability_tensor[0].tolist(),
+        )
         decoded_class_labels = self.encoder.inverse_transform(class_labels)
         return list(map(int, decoded_class_labels)), probabilities
 
-    def get_input_dims(self) -> tuple[int, int]:
+    def get_input_dims(self) -> Tuple[int, int]:
         return self.input_dims
 
     def _convert_image_to_tensor(self, image: Image) -> Tensor:
