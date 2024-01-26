@@ -20,6 +20,7 @@ class View(IControllerObserver, IPredictionsObserver):
         self.TOP_K = 3
 
         self.root = tk.Tk()
+        self.root.protocol("WM_DELETE_WINDOW", self.root.destroy)
         self.root.resizable(False, False)
         self.renders = [
             ImageTk.PhotoImage(
