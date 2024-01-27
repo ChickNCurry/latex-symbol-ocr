@@ -15,12 +15,12 @@ class LatexSymbolClassifier(IClassifier):
     def __init__(self) -> None:
         self.model = CNN(1, 369)
         self.input_dims = self.model.get_input_dims()
-        with open("data/model_state.pt", "rb") as f:
+        with open("src/application/state/model_state.pt", "rb") as f:
             self.model.load_state_dict(load(f))
         self.model.eval()
 
         self.encoder = LabelEncoder()
-        self.encoder.classes_ = np.load("data/classes.npy")
+        self.encoder.classes_ = np.load("src/application/state/classes.npy")
 
     def classify(self, image: Image, top_k: int) -> Tuple[List[int], List[float]]:
         tensor = self._convert_image_to_tensor(image)

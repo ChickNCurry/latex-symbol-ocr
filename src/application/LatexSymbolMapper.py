@@ -7,7 +7,7 @@ from src.application.interfaces import IMapper
 
 class LatexSymbolMapper(IMapper):
     def __init__(self) -> None:
-        self.markup_df = pd.read_csv("data/symbols.csv")
+        self.markup_df = pd.read_csv("src/application/state/symbols.csv")
 
     def map_to_markup(self, class_labels: List[int]) -> List[str]:
         markups = []
