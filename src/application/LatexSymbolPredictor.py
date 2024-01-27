@@ -1,12 +1,12 @@
 from typing import Tuple
 from PIL.Image import Image
 
-from src.domain.Prediction import Prediction
+from src.domain.models import Prediction
 from src.domain.Predictions import Predictions
-from src.application.interfaces import IClassifier
-from src.application.interfaces import IMapper
-from src.application.interfaces import IRenderer
-from src.application.interfaces import IPredictor
+from src.application.models import IClassifier
+from src.application.models import IMapper
+from src.application.models import IRenderer
+from src.application.models import IPredictor
 
 
 class LatexSymbolPredictor(IPredictor):
@@ -17,15 +17,17 @@ class LatexSymbolPredictor(IPredictor):
         renderer: IRenderer,
         predictions: Predictions,
     ):
-        self.classifier = classifier
-        self.mapper = mapper
-        self.renderer = renderer
-        self.predictions = predictions
+        self._classifier = classifier
+        self._mapper = mapper
+        self._renderer = renderer
+        self._predictions = predictions
 
     def predict_markup(self, image: Image) -> None:
-        class_labels, probabilities = self.classifier.classify(image, 3)
-        markups = self.mapper.map_to_markup(class_labels)
-        renders = self.renderer.render_markup(markups)
+        class_labels, probabilities = self._classifier.classify(image, 3)
+
+        markups = self._mapper.map_to_markup(class_labels)
+        renders = self._renderer.render_markup(markups)
+
         assert len(class_labels) == len(markups) == len(renders)
 
         predictions = [
@@ -33,7 +35,7 @@ class LatexSymbolPredictor(IPredictor):
             for i in range(len(class_labels))
         ]
 
-        self.predictions.set_predictions(predictions)
+        self._predictions.set_predictions(predictions)
 
     def get_input_dims(self) -> Tuple[int, int]:
-        return self.classifier.get_input_dims()
+        return self._classifier.get_input_dims()

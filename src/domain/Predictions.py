@@ -1,18 +1,17 @@
 from typing import List
 
-from src.domain.interfaces import IPredictionsObserver
-from src.domain.Prediction import Prediction
+from src.domain.models import IPredictionsObserver, Prediction
 
 
 class Predictions:
     def __init__(self) -> None:
-        self.predictions: List[Prediction] = []
-        self.observers: List[IPredictionsObserver] = []
+        self._predictions: List[Prediction] = []
+        self._observers: List[IPredictionsObserver] = []
 
     def register(self, observer: IPredictionsObserver) -> None:
-        self.observers.append(observer)
+        self._observers.append(observer)
 
     def set_predictions(self, predictions: List[Prediction]) -> None:
-        self.predictions = predictions
-        for obs in self.observers:
-            obs.update_predictions(self.predictions)
+        self._predictions = predictions
+        for obs in self._observers:
+            obs.update_predictions(self._predictions)

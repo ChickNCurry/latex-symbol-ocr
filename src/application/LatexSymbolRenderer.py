@@ -4,7 +4,7 @@ from typing import List
 from PIL import Image
 import matplotlib.pyplot as plt
 
-from src.application.interfaces import IRenderer
+from src.application.models import IRenderer
 
 
 class LatexSymbolRenderer(IRenderer):

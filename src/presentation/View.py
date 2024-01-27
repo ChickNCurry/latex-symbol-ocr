@@ -1,78 +1,96 @@
 import tkinter as tk
 from tkinter import ttk
 from typing import List, Tuple
-
 from PIL import Image, ImageTk
 
+from src.presentation.models import PredictionComponent
 from src.controllers.Controller import Controller
-from src.controllers.interfaces import IControllerObserver
-from src.domain.interfaces import IPredictionsObserver
-from src.domain.Prediction import Prediction
+from src.controllers.models import IControllerObserver
+from src.domain.models import IPredictionsObserver, Prediction
 
 
 class View(IControllerObserver, IPredictionsObserver):
+    _CANVAS_DIMS = (256, 256)
+    _RENDER_DIMS = (64, 64)
+    _ENTRY_WIDTH = 20
+    _TOP_K = 3
+
     def __init__(self, controller: Controller):
-        self.controller = controller
+        self._controller = controller
 
-        self.CANVAS_DIMS = (256, 256)
-        self.RENDER_DIMS = (64, 64)
-        self.ENTRY_WIDTH = 20
-        self.TOP_K = 3
+        self._root = tk.Tk()
+        self._root.protocol("WM_DELETE_WINDOW", self._root.destroy)
+        self._root.resizable(False, False)
 
-        self.root = tk.Tk()
-        self.root.protocol("WM_DELETE_WINDOW", self.root.destroy)
-        self.root.resizable(False, False)
-        self.renders = [
-            ImageTk.PhotoImage(
-                Image.new(mode="RGB", size=self.RENDER_DIMS, color="white")
-            )
-        ] * self.TOP_K
-        self.markups = [tk.StringVar(), tk.StringVar(), tk.StringVar()]
+        self._renders = [self._create_blank_render() for i in range(self._TOP_K)]
+        self._markups = [tk.StringVar() for i in range(self._TOP_K)]
 
-        self.canvas = tk.Canvas(
-            self.root, bg="white", width=self.CANVAS_DIMS[0], height=self.CANVAS_DIMS[1]
-        )
-        self.canvas.bind(
-            "<B1-Motion>", lambda e: self.controller.draw(e, self.CANVAS_DIMS)
-        )
-        self.button_predict = ttk.Button(
-            self.root, text="predict", command=self.controller.predict
-        )
-        self.button_clear = ttk.Button(
-            self.root, text="clear", command=self.controller.clear
+        self._canvas = tk.Canvas(
+            self._root,
+            bg="white",
+            width=self._CANVAS_DIMS[0],
+            height=self._CANVAS_DIMS[1],
         )
 
-        self.prediction_components = []
-        for i in range(self.TOP_K):
-            label_ranking = ttk.Label(self.root, text=f"{i + 1}.")
-            label_render = ttk.Label(self.root, image=self.renders[i])
-            entry_markup = ttk.Entry(
-                self.root, width=self.ENTRY_WIDTH, textvariable=self.markups[i]
-            )
-            button_copy = ttk.Button(
-                self.root, text="copy", command=lambda: self._copy(i)
-            )
-            self.prediction_components.append(
-                (label_ranking, label_render, entry_markup, button_copy)
-            )
+        self._canvas.bind(
+            "<B1-Motion>",
+            lambda e: self._controller.draw(e, self._CANVAS_DIMS),
+        )
 
-        self.canvas.grid(column=0, row=0, columnspan=3, rowspan=3)
-        self.button_predict.grid(column=0, row=3, columnspan=3)
-        self.button_clear.grid(column=3, row=3, columnspan=4)
+        self._button_predict = ttk.Button(
+            self._root, text="predict", command=self._controller.predict
+        )
 
-        for i, c in enumerate(self.prediction_components):
-            c[0].grid(column=3, row=i)
-            c[1].grid(column=4, row=i)
-            c[2].grid(column=5, row=i)
-            c[3].grid(column=6, row=i)
+        self._button_clear = ttk.Button(
+            self._root, text="clear", command=self._controller.clear
+        )
+
+        self._prediction_components = [
+            self._create_prediction_component(i) for i in range(self._TOP_K)
+        ]
+
+        self._canvas.grid(column=0, row=0, columnspan=3, rowspan=3)
+        self._button_predict.grid(column=0, row=3, columnspan=3)
+        self._button_clear.grid(column=3, row=3, columnspan=4)
+
+        for i, c in enumerate(self._prediction_components):
+            c.label_ranking.grid(column=3, row=i)
+            c.label_render.grid(column=4, row=i)
+            c.entry_markup.grid(column=5, row=i)
+            c.button_copy.grid(column=6, row=i)
+
+    def _create_blank_render(self) -> ImageTk.PhotoImage:
+        return ImageTk.PhotoImage(
+            Image.new(mode="RGB", size=self._RENDER_DIMS, color="white")
+        )
+
+    def _copy(self, index: int) -> None:
+        self._root.clipboard_clear()
+        self._root.clipboard_append(self._markups[index].get())
+
+    def _create_prediction_component(self, index: int) -> PredictionComponent:
+        label_ranking = ttk.Label(self._root, text=f"{index + 1}.")
+        label_render = ttk.Label(self._root, image=self._renders[index])
+        entry_markup = ttk.Entry(
+            self._root, width=self._ENTRY_WIDTH, textvariable=self._markups[index]
+        )
+        button_copy = ttk.Button(
+            self._root, text="copy", command=lambda: self._copy(index)
+        )
+        return PredictionComponent(
+            label_ranking,
+            label_render,
+            entry_markup,
+            button_copy,
+        )
 
     def run(self) -> None:
-        self.root.mainloop()
+        self._root.mainloop()
 
     def update_drawing(
         self, coords: Tuple[int, int], brush_size: Tuple[int, int]
     ) -> None:
-        self.canvas.create_oval(
+        self._canvas.create_oval(
             (
                 coords[0] - brush_size[0],
                 coords[1] - brush_size[1],
@@ -83,25 +101,26 @@ class View(IControllerObserver, IPredictionsObserver):
         )
 
     def update_clearing(self) -> None:
-        self.canvas.delete("all")
-        self.renders = [
-            ImageTk.PhotoImage(
-                Image.new(mode="RGB", size=self.RENDER_DIMS, color="white")
+        self._canvas.delete("all")
+        self._renders = [self._create_blank_render() for i in range(self._TOP_K)]
+
+        for i in range(self._TOP_K):
+            self._prediction_components[i].label_render.configure(
+                image=self._renders[i]
             )
-        ] * 3
-        for i in range(self.TOP_K):
-            self.prediction_components[i][1].configure(image=self.renders[i])
-        for m in self.markups:
+
+        for m in self._markups:
             m.set("")
 
     def update_predictions(self, predictions: List[Prediction]) -> None:
-        assert len(predictions) == self.TOP_K
-        for i in range(self.TOP_K):
-            self.markups[i].set(predictions[i].markup)
-            render = predictions[i].render.resize(self.RENDER_DIMS)
-            self.renders[i] = ImageTk.PhotoImage(render)
-            self.prediction_components[i][1].configure(image=self.renders[i])
+        assert len(predictions) == self._TOP_K
 
-    def _copy(self, index: int) -> None:
-        self.root.clipboard_clear()
-        self.root.clipboard_append(self.markups[index].get())
+        for i in range(self._TOP_K):
+            self._markups[i].set(predictions[i].markup)
+
+            render = predictions[i].render.resize(self._RENDER_DIMS)
+            self._renders[i] = ImageTk.PhotoImage(render)
+
+            self._prediction_components[i].label_render.configure(
+                image=self._renders[i]
+            )

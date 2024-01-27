@@ -1,7 +1,5 @@
 from abc import ABC, abstractmethod
 from typing import List, Tuple
-
-from PIL.Image import Image
 from PIL.Image import Image
 
 

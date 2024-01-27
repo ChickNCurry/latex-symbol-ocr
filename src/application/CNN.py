@@ -2,14 +2,14 @@ from typing import Tuple, cast
 import torch.nn as nn
 from torch import Tensor
 
-from src.application.interfaces import IInputDependant
+from src.application.models import IInputDependant
 
 
 class CNN(nn.Module, IInputDependant):
+    _INPUT_DIMS = (32, 32)
+
     def __init__(self, in_channels: int, num_of_classes: int) -> None:
         super().__init__()
-
-        self.input_dims = (32, 32)
 
         self.model = nn.Sequential(
             nn.Conv2d(in_channels=in_channels, out_channels=32, kernel_size=5),
@@ -43,7 +43,7 @@ class CNN(nn.Module, IInputDependant):
         return cast(Tensor, self.model(x))
 
     def get_input_dims(self) -> Tuple[int, int]:
-        return self.input_dims
+        return self._INPUT_DIMS
 
     def _init_weights(self) -> None:
         for m in self.model:
