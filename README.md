@@ -2,7 +2,7 @@
 
 A simple python app for predicting the latex markup code corresponding to symbols drawn by the user.
 For inference, a CNN trained with the handwritten symbol dataset HASYv2 was used.
-The software architectures of this app was influenced by clean architecture and DDD.
+The software architecture of this app was influenced by clean architecture and DDD.
 
 ## Finished Features
 
