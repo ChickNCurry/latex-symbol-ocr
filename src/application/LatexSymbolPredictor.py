@@ -31,8 +31,7 @@ class LatexSymbolPredictor(IPredictor):
         assert len(class_labels) == len(markups) == len(renders)
 
         predictions = [
-            Prediction(class_labels[i], markups[i], renders[i], probabilities[i])
-            for i in range(len(class_labels))
+            Prediction(*z) for z in zip(class_labels, markups, renders, probabilities)
         ]
 
         self._predictions.set_predictions(predictions)
