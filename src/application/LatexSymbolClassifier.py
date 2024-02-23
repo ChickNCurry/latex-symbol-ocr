@@ -24,10 +24,7 @@ class LatexSymbolClassifier(IClassifier):
 
     def _convert_image_to_tensor(self, image: Image) -> Tensor:
         image_resized = image.resize(self._input_dims)
-        image_rgb = image_resized.convert("RGB")
-        image_np = np.array(image_rgb)
-        image_cv = image_np[:, :, ::-1].copy()
-        image_gray = cv2.cvtColor(image_cv, cv2.COLOR_BGR2GRAY)
+        image_gray = cv2.cvtColor(np.array(image_resized), cv2.COLOR_RGB2GRAY)
         image_tensor = torch.FloatTensor(image_gray)[None, None, :, :]
         return image_tensor
 
@@ -36,10 +33,12 @@ class LatexSymbolClassifier(IClassifier):
         output = self._model(tensor)
 
         probability_tensor, class_label_tensor = torch.topk(output, top_k, 1)
+
         class_labels, probabilities = (
             class_label_tensor[0].tolist(),
             probability_tensor[0].tolist(),
         )
+
         decoded_class_labels = self._encoder.inverse_transform(class_labels)
 
         return list(map(int, decoded_class_labels)), probabilities
