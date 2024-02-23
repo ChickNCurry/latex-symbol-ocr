@@ -22,8 +22,8 @@ class View(IControllerObserver, IPredictionsObserver):
         self._root.protocol("WM_DELETE_WINDOW", self._root.destroy)
         self._root.resizable(False, False)
 
-        self._renders = [self._create_blank_render() for i in range(self._TOP_K)]
-        self._markups = [tk.StringVar() for i in range(self._TOP_K)]
+        self._renders = [self._create_blank_render() for _ in range(self._TOP_K)]
+        self._markups = [tk.StringVar() for _ in range(self._TOP_K)]
 
         self._canvas = tk.Canvas(
             self._root,
@@ -102,7 +102,7 @@ class View(IControllerObserver, IPredictionsObserver):
 
     def update_clearing(self) -> None:
         self._canvas.delete("all")
-        self._renders = [self._create_blank_render() for i in range(self._TOP_K)]
+        self._renders = [self._create_blank_render() for _ in range(self._TOP_K)]
 
         for i in range(self._TOP_K):
             self._prediction_components[i].label_render.configure(
