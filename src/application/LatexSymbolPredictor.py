@@ -1,12 +1,10 @@
 from typing import Tuple
+
 from PIL.Image import Image
 
+from src.application.models import IClassifier, IMapper, IPredictor, IRenderer
 from src.domain.models import Prediction
 from src.domain.Predictions import Predictions
-from src.application.models import IClassifier
-from src.application.models import IMapper
-from src.application.models import IRenderer
-from src.application.models import IPredictor
 
 
 class LatexSymbolPredictor(IPredictor):

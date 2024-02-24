@@ -1,12 +1,13 @@
 import tkinter as tk
 from tkinter import ttk
 from typing import List, Tuple
+
 from PIL import Image, ImageTk
 
-from src.presentation.models import PredictionComponent
 from src.controllers.Controller import Controller
 from src.controllers.models import IControllerObserver
 from src.domain.models import IPredictionsObserver, Prediction
+from src.presentation.models import PredictionComponent
 
 
 class View(IControllerObserver, IPredictionsObserver):

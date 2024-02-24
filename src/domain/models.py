@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from PIL.Image import Image
 from typing import List
+
+from PIL.Image import Image
 
 
 @dataclass

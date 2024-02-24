@@ -1,8 +1,8 @@
 import io
 from typing import List
 
-from PIL import Image
 import matplotlib.pyplot as plt
+from PIL import Image
 
 from src.application.models import IRenderer
 
@@ -20,7 +20,7 @@ class LatexSymbolRenderer(IRenderer):
                 plt.text(0.5, 0.5, f"${m}$", size=200, ha="center", va="center")
                 plt.savefig(img_buffer, format="png")
                 plt.close()
-            except:
+            except Exception:
                 plt.figure()
                 plt.axis("off")
                 plt.text(

@@ -1,10 +1,11 @@
 from typing import List, Tuple
-from sklearn.preprocessing import LabelEncoder  # type: ignore
-from torch import load, Tensor
-from PIL.Image import Image
-import numpy as np
+
 import cv2
+import numpy as np
 import torch
+from PIL.Image import Image
+from sklearn.preprocessing import LabelEncoder  # type: ignore
+from torch import Tensor, load
 
 from src.application.CNN import CNN
 from src.application.models import IClassifier

@@ -1,8 +1,9 @@
 from typing import Any, List, Tuple
+
 from PIL import Image, ImageDraw
 
-from src.controllers.models import IControllerObserver
 from src.application.models import IPredictor
+from src.controllers.models import IControllerObserver
 
 
 class Controller:
