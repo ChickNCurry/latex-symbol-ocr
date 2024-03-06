@@ -17,6 +17,9 @@ types-pillow = "^10.1.0.20240106"
 pandas-stubs = "^2.1.4.231227"
 torch = "^2.1.2"
 
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.29.3"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
