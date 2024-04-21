@@ -1,9 +1,10 @@
 [tool.poetry]
-name = "src"
+name = "markup-ocr"
 version = "0.1.0"
 description = ""
-authors = ["Max Burzer <maximilian.burzer@student.kit.edu>"]
+authors = ["Max Burzer <maxi.burzer@gmail.com>"]
 readme = "README.md"
+packages = [{include = "src"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"
