@@ -32,7 +32,9 @@ def create_tokenizer(
 
 
 def load_tokenizer(tokenizer_path: str) -> PreTrainedTokenizerFast:
-    return PreTrainedTokenizerFast(tokenizer_file=tokenizer_path)
+    tokenizer = PreTrainedTokenizerFast(tokenizer_file=tokenizer_path)
+    tokenizer.clean_up_tokenization_spaces = True
+    return tokenizer
 
 
 def clean(text: str) -> str:
@@ -120,7 +122,7 @@ class LatexEquationDataset(Dataset):  # type: ignore
 
     def __getitem__(self, idx: int) -> Tuple[Tensor, Tensor]:
         img_name = self._img_names[idx]
-        img_tensor = read_image(os.path.join(self._img_dir, img_name))
+        img_tensor = read_image(os.path.join(self._img_dir, img_name)).float()
 
         eq_idx = int(img_name.split(".")[0])
         equation = self._equations[eq_idx]
@@ -142,7 +144,7 @@ class LatexEquationSampler(Sampler[int]):
 
             # sort dataset by height, width, and token length
             # needed for efficent batching and avoiding gpu memory leaks
-            sorting = lambda i: (
+            sort_criterion = lambda i: (
                 dataset[i][0].shape[0],
                 dataset[i][0].shape[1],
                 dataset[i][1].shape[0],
@@ -150,7 +152,7 @@ class LatexEquationSampler(Sampler[int]):
 
             self.indices = sorted(
                 list(range(len(dataset))),  # type: ignore
-                key=sorting,
+                key=sort_criterion,
                 reverse=True,
             )
 
@@ -164,58 +166,99 @@ class LatexEquationSampler(Sampler[int]):
         return len(self.dataset)
 
 
-def get_input_token_ids(
-    token_ids: Tensor, tokenizer: PreTrainedTokenizerFast
-) -> Tensor:
-    return torch.cat(
-        [
-            torch.tensor(
-                [tokenizer.convert_tokens_to_ids("[BOS]")], dtype=torch.int64
-            ).expand(10, 1),
-            token_ids,
-        ],
-        dim=1,
-    )
-
-
-def get_target_token_ids(
-    token_ids: Tensor, tokenizer: PreTrainedTokenizerFast
-) -> Tensor:
-    return torch.cat(
-        [
-            token_ids,
-            torch.tensor(
-                [tokenizer.convert_tokens_to_ids("[EOS]")], dtype=torch.int64
-            ).expand(10, 1),
-        ],
-        dim=1,
-    )
-
-
 def curry_collate_fn(
-    padding_token_id: int, img_padding_value: float = 1
-) -> Callable[[List[Tuple[Tensor, Tensor]]], Tuple[Tensor, Tensor]]:
+    tokenizer: PreTrainedTokenizerFast, img_padding_value: float = 255
+) -> Callable[[List[Tuple[Tensor, Tensor]]], Tuple[Tensor, Tensor, Tensor, Tensor]]:
 
-    def collate_fn(batch: List[Tuple[Tensor, Tensor]]) -> Tuple[Tensor, Tensor]:
-        imgs = [entry[0] for entry in batch]
-        equations = [entry[1] for entry in batch]
+    def collate_fn(
+        batch: List[Tuple[Tensor, Tensor]]
+    ) -> Tuple[Tensor, Tensor, Tensor, Tensor]:
 
-        max_h = max(img.shape[1] for img in imgs)
-        max_w = max(img.shape[2] for img in imgs)
+        img_batch = [entry[0] for entry in batch]
+        token_ids_batch = [entry[1] for entry in batch]
 
-        padded_imgs = [
-            pad(
-                img,
-                (0, max_w - img.shape[2], 0, max_h - img.shape[1]),
-                value=img_padding_value,
-            )
-            for img in imgs
-        ]
+        max_h = max(img.shape[1] for img in img_batch)
+        max_w = max(img.shape[2] for img in img_batch)
 
-        padded_equations = pad_sequence(
-            equations, batch_first=True, padding_value=padding_token_id
+        img_padded_batch = torch.stack(
+            [
+                pad(
+                    img,
+                    (0, max_w - img.shape[2], 0, max_h - img.shape[1]),
+                    value=img_padding_value,
+                )
+                for img in img_batch
+            ]
         )
 
-        return torch.stack(padded_imgs), padded_equations
+        # img_mask_batch = torch.stack(
+        #     [get_img_key_padding_mask(img, max_h, max_w) for img in img_batch]
+        # )
+
+        # assert img_padded_batch.shape == img_mask_batch.shape
+
+        input_token_ids_batch = [
+            torch.cat(
+                [
+                    torch.tensor(
+                        [tokenizer.convert_tokens_to_ids("[BOS]")],
+                        dtype=torch.int64,
+                    ),
+                    t,
+                ]
+            )
+            for t in token_ids_batch
+        ]
+
+        input_token_ids_padded_batch = pad_sequence(
+            input_token_ids_batch,
+            batch_first=True,
+            padding_value=tokenizer.convert_tokens_to_ids("[PAD]"),
+        )
+
+        max_l = max(t.shape[0] for t in input_token_ids_batch)
+        input_token_ids_mask_batch = torch.stack(
+            [get_token_ids_padding_mask(t, max_l) for t in token_ids_batch]
+        )
+
+        assert input_token_ids_padded_batch.shape == input_token_ids_mask_batch.shape
+
+        target_token_ids_batch = [
+            torch.cat(
+                [
+                    t,
+                    torch.tensor(
+                        [tokenizer.convert_tokens_to_ids("[EOS]")],
+                        dtype=torch.int64,
+                    ),
+                ]
+            )
+            for t in token_ids_batch
+        ]
+
+        target_token_ids_padded_batch = pad_sequence(
+            target_token_ids_batch,
+            batch_first=True,
+            padding_value=tokenizer.convert_tokens_to_ids("[PAD]"),
+        )
+
+        return (
+            img_padded_batch,
+            input_token_ids_padded_batch,
+            input_token_ids_mask_batch,
+            target_token_ids_padded_batch,
+        )
 
     return collate_fn
+
+
+def get_img_key_padding_mask(img: Tensor, max_h: int, max_w: int) -> Tensor:
+    mask = torch.ones((1, max_h, max_w)).bool()
+    mask[:, 0 : img.shape[1], 0 : img.shape[2]] = False
+    return mask
+
+
+def get_token_ids_padding_mask(t: Tensor, max_l: int) -> Tensor:
+    mask = torch.ones(max_l).bool()
+    mask[0 : t.shape[0]] = False
+    return mask
