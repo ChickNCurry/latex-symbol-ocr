@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "markup-ocr"
+name = "latex-symbol-ocr"
 version = "0.1.0"
 description = ""
 authors = ["Max Burzer <maxi.burzer@gmail.com>"]

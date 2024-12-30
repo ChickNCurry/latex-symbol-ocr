@@ -1,4 +1,4 @@
-# Markup-OCR
+# Latex Symbol OCR
 
 A simple python app for predicting the latex markup code corresponding to symbols drawn by the user.
 For inference, a CNN trained with the handwritten symbol dataset HASYv2 was used.
